@@ -40,9 +40,15 @@ class _MyHomePageState extends State<MyHomePage> {
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
-          children: const [
+          children: [
             SlideVerify(
               imageUrl: "assets/1.jpg",
+              ifMatches: () async {
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                  content: Text("matches"),
+                  duration: Duration(seconds: 1),
+                ));
+              },
             )
           ],
         ),
