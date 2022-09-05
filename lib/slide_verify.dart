@@ -2,6 +2,7 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_verify/paths/triangle_path.dart';
+import 'package:shake_animation_widget/shake_animation_widget.dart';
 
 import 'enums.dart';
 
@@ -13,7 +14,8 @@ class SlideVerify extends StatefulWidget {
       this.widgetHeight = 300,
       this.widgetWidth = 400,
       this.slideVerifyShape = SlideVerifyShape.circle,
-      this.ifMatches})
+      this.ifMatches,
+      this.ifNotMatch})
       : super(key: key);
   final double widgetWidth;
   final double widgetHeight;
@@ -21,6 +23,7 @@ class SlideVerify extends StatefulWidget {
   final ImageFrom imageFrom;
   final SlideVerifyShape slideVerifyShape;
   final VoidCallback? ifMatches;
+  final VoidCallback? ifNotMatch;
 
   @override
   State<SlideVerify> createState() => _SlideVerifyState();
@@ -30,10 +33,16 @@ class _SlideVerifyState extends State<SlideVerify> {
   double _left = 0;
   late double defaultTop = 0;
   late double defaultLeft = 0;
+  final ShakeAnimationController _shakeAnimationController =
+      ShakeAnimationController();
 
   @override
   void initState() {
     super.initState();
+
+    /// TODO
+    /// [bug]
+    /// 可能会出现超出图片范围的问题
     defaultLeft = Random().nextInt(widget.widgetWidth.floor()) * 1.0;
     defaultTop = Random().nextInt(widget.widgetHeight.floor()) * 1.0;
   }
@@ -49,6 +58,12 @@ class _SlideVerifyState extends State<SlideVerify> {
               widget.ifMatches!.call();
             } else {
               debugPrint(_left.toString());
+            }
+          } else {
+            if (widget.ifNotMatch == null) {
+              _shakeAnimationController.start();
+            } else {
+              widget.ifNotMatch!.call();
             }
           }
         },
@@ -83,42 +98,48 @@ class _SlideVerifyState extends State<SlideVerify> {
       width: widget.widgetWidth,
       child: Column(
         children: [
-          Container(
-            width: widget.widgetWidth,
-            height: widget.widgetHeight,
-            color: Colors.orangeAccent,
-            child: Stack(clipBehavior: Clip.none, children: [
-              if (widget.imageUrl != null &&
-                  widget.imageFrom == ImageFrom.asset)
-                Positioned.fill(
-                    child: Image(
-                  image: AssetImage(widget.imageUrl!),
-                  fit: BoxFit.cover,
-                )),
-              Positioned(
-                  left: defaultLeft,
-                  top: defaultTop,
-                  child: ClipPath(
-                    clipper: TrianglePath(),
-                    child: Container(
-                      width: 40,
-                      height: 40,
-                      color: Colors.red,
-                    ),
-                  )),
-              Positioned(
-                  left: -defaultLeft + _left,
-                  top: 0,
-                  child: buildDraggableWidget()),
-              Positioned(
-                  left: -defaultLeft + _left,
-                  top: 0,
-                  child: CustomPaint(
-                    painter: TriangleBorderPainter(
-                        top: defaultTop, left: defaultLeft, widgetSize: 40),
-                  )),
-            ]),
-          ),
+          ShakeAnimationWidget(
+              shakeAnimationController: _shakeAnimationController,
+              shakeAnimationType: ShakeAnimationType.LeftRightShake,
+              shakeCount: 3,
+              shakeRange: 0.2,
+              isForward: false,
+              child: Container(
+                width: widget.widgetWidth,
+                height: widget.widgetHeight,
+                color: Colors.orangeAccent,
+                child: Stack(clipBehavior: Clip.none, children: [
+                  if (widget.imageUrl != null &&
+                      widget.imageFrom == ImageFrom.asset)
+                    Positioned.fill(
+                        child: Image(
+                      image: AssetImage(widget.imageUrl!),
+                      fit: BoxFit.cover,
+                    )),
+                  Positioned(
+                      left: defaultLeft,
+                      top: defaultTop,
+                      child: ClipPath(
+                        clipper: TrianglePath(),
+                        child: Container(
+                          width: 40,
+                          height: 40,
+                          color: Colors.red,
+                        ),
+                      )),
+                  Positioned(
+                      left: -defaultLeft + _left,
+                      top: 0,
+                      child: buildDraggableWidget()),
+                  Positioned(
+                      left: -defaultLeft + _left,
+                      top: 0,
+                      child: CustomPaint(
+                        painter: TriangleBorderPainter(
+                            top: defaultTop, left: defaultLeft, widgetSize: 40),
+                      )),
+                ]),
+              )),
           Stack(
             children: [
               Container(
@@ -135,6 +156,12 @@ class _SlideVerifyState extends State<SlideVerify> {
                           widget.ifMatches!.call();
                         } else {
                           debugPrint(_left.toString());
+                        }
+                      } else {
+                        if (widget.ifNotMatch == null) {
+                          _shakeAnimationController.start();
+                        } else {
+                          widget.ifNotMatch!.call();
                         }
                       }
                     },
